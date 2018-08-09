@@ -1,3 +1,20 @@
+Skip to content
+
+Search or jump to…
+
+Pull requests
+Issues
+Marketplace
+Explore
+@helu1456444576 Sign out
+1
+1 1 zqb1655200505/onlineSale
+Code  Issues 0  Pull requests 0  Projects 0  Wiki  Insights
+onlineSale/src/main/webapp/WEB-INF/views/myCart.jsp
+67ded3e  on 24 May
+@zqb1655200505 zqb1655200505 秒杀流程走通
+
+547 lines (473 sloc)  18.5 KB
 <%--
   Created by IntelliJ IDEA.
   User: zqb
@@ -32,7 +49,6 @@
             line-height: 18px;
             font-size: 15px;
         }
-
     </style>
 </head>
 <body>
@@ -63,7 +79,7 @@
                     </template>
 
                     <Menu-Item name="username" v-else>
-                        <a>
+                        <a href="/onlineSale/personCenter/">
                             <template>
                                 <Avatar id="userPic" :src="'<%=basePath%>'+avatarSrc"/>
                             </template>
@@ -72,12 +88,12 @@
                     </Menu-Item>
 
                     <%--<Menu-Item name="MyCart">--%>
-                        <%--<Badge :count="cartNum">--%>
-                            <%--<a href="/onlineSale/myCart/">--%>
-                                <%--<Icon type="ios-cart"></Icon>--%>
-                                <%--购物车--%>
-                            <%--</a>--%>
-                        <%--</Badge>--%>
+                    <%--<Badge :count="cartNum">--%>
+                    <%--<a href="/onlineSale/myCart/">--%>
+                    <%--<Icon type="ios-cart"></Icon>--%>
+                    <%--购物车--%>
+                    <%--</a>--%>
+                    <%--</Badge>--%>
                     <%--</Menu-Item>--%>
 
                     <Menu-Item name="MyOrder">
@@ -94,8 +110,16 @@
                         </a>
                     </Menu-Item>
 
+                    <Menu-Item name="MyMessage" v-if="haveLogin">
+                        <Badge :count="messageNum">
+                            <a href="/onlineSale/myMessage?content=name1">
+                                我的消息
+                            </a>
+                        </Badge>
+
+                    </Menu-Item>
                     <Menu-Item name="logout" v-if="haveLogin">
-                        <a style="color: #cd121b" href="/onlineSale/logout">
+                        <a style="color: #cd121b" @click="signOut()">
                             <Icon type="log-out"></Icon>
                             退出
                         </a>
@@ -214,44 +238,41 @@
     //# sourceURL=myCart.js
     var app = new Vue({
         el: "#app",
-
         data: {
             avatarSrc:"/upload/image/defaultAvatar.jpg",
             username:"",
             haveLogin:false,
             isSeller:false,
             cartNum:cookie("cartGoodsNum")||0,
-
+            messageNum:cookie("messageNum")||0,
             //视图对象
             viewModel:{
                 keys:"",
                 allChecked:false,
-                list:[],
+                list:[]
             },
-
             page : {
                 no: 1,
                 total: 20,
                 size: parseInt(cookie("pageSize")) || 5,
             },
-
             chooseNum:0,
-
             totalPrice:0,
-
             purchaseModal:"",
+            money:0
         }
     });
-
-
     //全选事件
     function checkAll() {
         app.totalPrice=0;
+
         if(app.viewModel.allChecked)
         {
+            app.chooseNum=0;
             app.viewModel.list.forEach(function (item) {
                 item.checked = app.viewModel.allChecked;
                 app.totalPrice=app.totalPrice+getGoodsNumber(item.id)*item.goodsPrice;
+                app.chooseNum+=Number(getGoodsNumber(item.id));
             });
         }
         else
@@ -259,22 +280,19 @@
             app.viewModel.list.forEach(function (item) {
                 item.checked = app.viewModel.allChecked;
             });
+            app.chooseNum=0;
         }
     };
-
-
     function remove() {
         var list = [];
         app.viewModel.list.forEach(function (item) {
             if (item.checked)
                 list.push(item);
         });
-
         if (list.length == 0) {
             app.$Message.error('请选择需移除商品！');
             return;
         }
-
         app.$Modal.confirm({
             content: "<div style='margin-top: -16px;'><h2>移除商品</h2></div><br><p>确认将所选商品从购物车移除？</p>",
             loading: true,
@@ -286,20 +304,20 @@
             }
         });
     }
-
     function refresh()
     {
+
         var cartGoodsIdList=cookie("cartGoodsIdList")||"";
+
         var itemNumList=cookie("itemNumList")||"";
         if(cartGoodsIdList!="")
         {
-            ajaxGet("/onlineSale/myCart/getCartGoods?idList="+cartGoodsIdList+"&pageNo="+app.page.no+"&pageSize="+app.page.size+"&keys=" +encodeURIComponent(app.viewModel.keys),
+            ajaxGet("/onlineSale/getCartGoods?idList="+cartGoodsIdList+"&pageNo="+app.page.no+"&pageSize="+app.page.size+"&keys=" +encodeURIComponent(app.viewModel.keys),
                 function (res) {
-                app.viewModel.list=res.data;
-            },null,false);
+                    app.viewModel.list=res.data;
+                },null,false);
         }
     }
-
     $(document).ready(function () {
         ajaxGet("/onlineSale/getLoginUserInfo",function (res) {
             if(res.code==="success")
@@ -307,19 +325,22 @@
                 app.username=res.data.userName;
                 app.avatarSrc=res.data.userPic;
                 app.haveLogin=true;
+                app.userId=res.data.id;
                 if(res.data.userType==="ADMINISTRATOR")
                 {
                     app.isSeller=true;
                 }
-
-                //登录成功，将cookie中的购物车记录加入数据库
+                //获取现金余额
+                ajaxGet("/onlineSale/getMoney?userId="+app.userId,function(res){
+                    if(res.code=="success"){
+                        app.money=res.data.money;
+                    }
+                },null,false);
             }
         },null,false);
 
         refresh();
     });
-
-
     //从cookie获取该商品数目
     function getGoodsNumber(id) {
         var cartGoodsIdList=cookie("cartGoodsIdList")||"";
@@ -337,7 +358,6 @@
         }
         return numList[index];
     }
-
     //商品项发生变化时触发
     function itemNumChange(value,item)
     {
@@ -356,7 +376,6 @@
         }
         var numList=itemNumList.split(";");
         numList[index]=value;
-
         itemNumList="";
         var count=0;
         for(var i=0;i<numList.length-1;i++)
@@ -366,18 +385,15 @@
         }
         itemNumList=itemNumList+numList[numList.length-1];
         count=count+Number(numList[numList.length-1]);
-
         var option={
             path:"/onlineSale",
             expires:7,
         };
         cookie("cartGoodsNum",count,option);
         cookie("itemNumList",itemNumList,option);
-
         //动态改变小计
         var id="price_"+item.id;
         document.getElementById(id).innerText="￥"+Number(value)*Number(item.goodsPrice);
-
         if(item.checked)
         {
             app.totalPrice=0;
@@ -387,27 +403,23 @@
             });
         }
     }
-
-
     //复选框勾选状态发生改变时触发
     function itemStatusChange(status,item) {
         if(status)
         {
             app.totalPrice=app.totalPrice+getGoodsNumber(item.id)*item.goodsPrice;
+            app.chooseNum+=Number(getGoodsNumber(item.id));
         }
         else
         {
             app.totalPrice=app.totalPrice-getGoodsNumber(item.id)*item.goodsPrice;
+            app.chooseNum-=Number(getGoodsNumber(item.id));
         }
     }
-
-
     function removeFromCookie(item) {
-
         var cartGoodsIdList=cookie("cartGoodsIdList")||"";
         var itemNumList=cookie("itemNumList")||"";
         var cartGoodsNum=cookie("cartGoodsNum")||0;
-
         var numList=itemNumList.split(";");
         var idList=cartGoodsIdList.split(";");
         cartGoodsIdList="";
@@ -421,7 +433,10 @@
             }
             else
             {
-                cartGoodsNum=cartGoodsNum-Number(numList[i]);
+                console.log("进入了移除");
+                console.log(cartGoodsNum+"____1");
+                cartGoodsNum=cartGoodsNum-1;
+                console.log(cartGoodsNum+"____2");
             }
         }
         if(cartGoodsIdList.length>0)
@@ -433,13 +448,11 @@
             path:"/onlineSale",
             expires:7,
         };
-
         cookie("cartGoodsNum",cartGoodsNum,option);
+        console.log(cookie("cartGoodsNum")+"____3");
         cookie("cartGoodsIdList",cartGoodsIdList,option);
         cookie("itemNumList",itemNumList,option);
     }
-
-
     function removeConfirm(item) {
         app.$Modal.confirm({
             content: "<div style='margin-top: -16px;'><h3>移除商品</h3><br><p>确认将商品 <span style='color: red;'>"+item.goodsName+"</span> 从购物车移除吗？</p><div>",
@@ -452,87 +465,108 @@
             }
         });
     }
-
-
     //去结算
     function gotoSettlement() {
         var flag = false;
         var idList=[];
         var numList=[];
-        app.purchaseModal="<h2 style='margin-top: -15px;'>您确认购买以下商品吗？</h2><br><ul style='list-style-type: none;font-size: 15px;'>";
-        app.viewModel.list.forEach(function (item) {
-            if (item.checked)
-            {
-                flag=true;
-                idList.push(item.id);
-                var num=getGoodsNumber(item.id);
-                numList.push(num);
-                app.purchaseModal+="<li style='line-height: 30px;'>"+item.goodsName+"  ，数目：<span style='color: red;'>"+num+"</span></li>";
-            }
-
-        });
-        app.purchaseModal+="</ul>";
-        if (!flag) {
-            app.$Message.error('请选择需购买商品！');
-            return;
+        if(app.money<app.totalPrice){
+            alert("余额不够");
         }
-        if(app.haveLogin)
-        {
-            app.purchaseModal+="<br><h3>商品总价为：<span style='color: red;font-size: 20px;'> ￥"+app.totalPrice+" </span> </h3>";
-
-            var list={
-                idList:idList,
-                numList:numList
-            };
-            app.$Modal.confirm({
-                content: app.purchaseModal,
-                loading: true,
-                onOk: function () {
-                    ajaxPostJSON("/onlineSale/myOrder/addOrder",list,function (res) {
-                        if(res.code=="success")
-                        {
-                            app.viewModel.list.forEach(function (item) {
-                                if (item.checked)
-                                {
-                                    removeFromCookie(item);
-                                }
-                            });
-                            app.$Modal.remove();
-                            setTimeout(function () {
-                                window.location.href="/onlineSale/myOrder/";
-                            },1000);
-
-                        }
-
-                    },null,false);
+        else{
+            app.purchaseModal="<h2 style='margin-top: -15px;'>您确认购买以下商品吗？</h2><br><ul style='list-style-type: none;font-size: 15px;'>";
+            app.viewModel.list.forEach(function (item) {
+                if (item.checked)
+                {
+                    flag=true;
+                    idList.push(item.id);
+                    var num=getGoodsNumber(item.id);
+                    numList.push(num);
+                    app.purchaseModal+="<li style='line-height: 30px;'>"+item.goodsName+"  ，数目：<span style='color: red;'>"+num+"</span></li>";
                 }
             });
+            app.purchaseModal+="</ul>";
+            if (!flag) {
+                app.$Message.error('请选择需购买商品！');
+                return;
+            }
+            if(app.haveLogin)
+            {
+                app.purchaseModal+="<br><h3>商品总价为：<span style='color: red;font-size: 20px;'> ￥"+app.totalPrice+" </span> </h3>";
+                var list={
+                    idList:idList,
+                    numList:numList
+                };
+                console.log(list);
+                app.$Modal.confirm({
+                    content: app.purchaseModal,
+                    loading: true,
+                    onOk: function () {
+
+                        ajaxPostJSON("/onlineSale/myOrder/addOrder",list,function (res) {
+                            if(res.code=="success")
+                            {
+                                app.viewModel.list.forEach(function (item) {
+                                    if (item.checked)
+                                    {
+                                        var data={
+                                            buyer:app.userId,
+                                            seller:item.user.id,
+                                            goodsId:item.id,
+                                            num:getGoodsNumber(item.id),
+                                            content:"待发货"
+                                        };
+
+                                        ajaxPost("/onlineSale/addMessage",data,function(res){
+                                            if(res.code=="success"){
+                                                app.messageNum++;
+                                                cookie("messageNum",app.messageNum);
+                                            }
+                                        },null,false);
+                                        removeFromCookie(item);
+                                    }
+                                });
+                                //将余额减少
+                                var m={
+                                    money:app.totalPrice
+                                };
+                                ajaxPost("/onlineSale/reduceMoney?userId="+app.userId,m,function (res) {
+
+                                },null,false);
+
+
+                                app.$Modal.remove();
+                                setTimeout(function () {
+                                    window.location.href="/onlineSale/myOrder/";
+                                },1000);
+                            }
+                        },null,false);
+                    }
+
+                });
+            }
+            else//通过后端跳转到登录页面，因为登录后还得返回当前页
+            {
+                var form=document.createElement("form");//定义一个form表单
+                form.action = "/onlineSale/myCart/gotoLogin";
+                form.method = "post";
+                form.style.display = "none";
+                var opt = document.createElement("input");
+                opt.name = "redirectUrl";
+                opt.value = window.location;
+                form.appendChild(opt);
+                document.body.appendChild(form);//将表单放置在web中
+                form.submit();//表单提交
+            }
         }
-        else//通过后端跳转到登录页面，因为登录后还得返回当前页
-        {
-            var form=document.createElement("form");//定义一个form表单
-            form.action = "/onlineSale/myCart/gotoLogin";
-            form.method = "post";
-            form.style.display = "none";
-            var opt = document.createElement("input");
-            opt.name = "redirectUrl";
-            opt.value = window.location;
-            form.appendChild(opt);
-            document.body.appendChild(form);//将表单放置在web中
-            form.submit();//表单提交
-        }
+
     }
-
-
-
     //改变每页数量
     function changePageSize(pageSize) {
         cookie("pageSize", pageSize);
         app.page.size=pageSize;
         refresh();
     }
-
-
     //切换页面
     function changePage(pageNo) {
         if(pageNo != null)
@@ -540,7 +574,27 @@
         refresh();
     }
 
+    //退出登录清空三个cookie的值，将cookie的值同步到数据库
+    function signOut(){
+        var list={
+            idList:cookie("cartGoodsIdList")||"",
+            numList:cookie("itemNumList")||""
+        };
+        ajaxPost("/onlineSale/logout",list,function(res){
+            if(res.code=="success"){
+                var option={
+                    path:"/onlineSale",
+                    expires:7,
+                };
+                cookie("cartGoodsIdList","",option);
+                cookie("itemNumList","",option);
+                cookie("cartGoodsNum",0,option);
+                console.log("goodsDetail进入退出方法");
+                window.location.href="/onlineSale/login/";
+            }
+        },null,false);
 
+    }
 </script>
 </body>
 </html>

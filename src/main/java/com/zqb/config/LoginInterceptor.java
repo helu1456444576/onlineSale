@@ -23,13 +23,13 @@ public class LoginInterceptor implements HandlerInterceptor{
         String path=request.getServletPath();//获取请求地址,形如/onlineSale/myOrder/
         session.setAttribute("redirectUrl", path);//把url放到session
         User user = (User)session.getAttribute("userSession");
-        if(user==null)
-        {
-            //拦截发现未登录，返回登录界面
+            if(user==null)
+            {
+                //拦截发现未登录，返回登录界面
 
-            response.sendRedirect("/onlineSale/login");  //会改变地址栏url
-            //request.getRequestDispatcher("/onlineSale/login").forward(request,response);//不会改变地址栏url
-            //拦截器直接向客户端返回数据
+                response.sendRedirect("/onlineSale/login");  //会改变地址栏url
+                //request.getRequestDispatcher("/onlineSale/login").forward(request,response);//不会改变地址栏url
+                //拦截器直接向客户端返回数据
 //            response.setContentType("application/json;charset=UTF-8");
 //            AjaxMessage msg=new AjaxMessage();
 //            msg.Set(MsgType.Error,"请先登录");
@@ -37,7 +37,7 @@ public class LoginInterceptor implements HandlerInterceptor{
 //            out.write(new ObjectMapper().writeValueAsString(msg));
 //            out.close();
 
-            return false;//不会继续调用其他的拦截器或处理器
+                return false;//不会继续调用其他的拦截器或处理器
         }
         return true;
     }

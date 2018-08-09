@@ -77,24 +77,24 @@ public class SecKillController {
     @ResponseBody
     public Object getSecKillGoods(HttpServletRequest request)
     {
-        List<Seckill> list=CurrentSecKill.seckillList;
-        if(list!=null)
+        List<Seckill> list=CurrentSecKill.seckillList;//获取秒杀商品列表
+        if(list!=null)//列表不为空
         {
-            return new AjaxMessage().Set(MsgType.Success, list);
+            return new AjaxMessage().Set(MsgType.Success, list);//返回秒杀商品单到前端
         }
         else
         {
-            Date now=new Date();
-            List<Seckill> seckillList=secKillDao.getCurrentSecKill(now);
-            if(seckillList==null||seckillList.size()==0)
+            Date now=new Date();//获得当前时间
+            List<Seckill> seckillList=secKillDao.getCurrentSecKill(now);//根据时间获得当前秒杀商品订单
+            if(seckillList==null||seckillList.size()==0)//秒杀商品订单为空
             {
                 return new AjaxMessage().Set(MsgType.Error,"当前暂无秒杀商品",null);
             }
-            else
+            else   // 不为空
             {
-                CurrentSecKill.seckillList=seckillList;
-                System.out.println(seckillList);
-                CurrentSecKill.secKillEndTime = seckillList.get(0).getSeckillEndTime().getTime();
+                CurrentSecKill.seckillList=seckillList; //给当前的秒杀商品的静态列表赋值可以减少数据库的访问
+                System.out.println(seckillList);//打印
+                CurrentSecKill.secKillEndTime = seckillList.get(0).getSeckillEndTime().getTime();//列表中第一个秒杀商品的结束时间
 
                 //开启消费者服务
                 Lock lock = new ReentrantLock();
@@ -102,7 +102,7 @@ public class SecKillController {
                 {
                     DoSecKillThread thread=new DoSecKillThread(lock);
                     CurrentSecKill.threadList.add(thread);
-                    thread.start();
+                    thread.start(); //运行该线程 不懂------------
                 }
                 return new AjaxMessage().Set(MsgType.Success,seckillList);
             }

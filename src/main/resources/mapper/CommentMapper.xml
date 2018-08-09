@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zqb.main.dao.CommentDao">
+
+    <resultMap id="commentResultMap" type="com.zqb.main.entity.Comment">
+        <association property="user" column="user_id" select="com.zqb.main.dao.UserDao.selectById"/>
+        <association property="goods" column="goods_id" select="com.zqb.main.dao.GoodsDao.getGoodsByPrimaryKey"/>
+    </resultMap>
+
+    <select id="selectCommentByGoodsIdAndUserId" resultMap="commentResultMap">
+        SELECT * FROM t_comment WHERE goods_id=#{goodsId} and user_id=#{userId}
+    </select>
+    <select id="selectCommentByGoodsId" resultMap="commentResultMap">
+        SELECT * FROM t_comment  WHERE goods_id=#{goodsId} and firstTime=1 ORDER BY level,comment_time DESC
+    </select>
+
+    <select id="selectCommentById" resultMap="commentResultMap">
+        SELECT * FROM t_comment WHERE id=#{id}
+    </select>
+    <insert id="addComment" parameterType="com.zqb.main.entity.Comment">
+        INSERT INTO
+        t_comment (id,user_id,goods_id,comment_time,level,comment,firstTime,father_id,have_children,delete_flag,arrange)
+        VALUES(#{id},#{user.id},#{goods.id},#{commentTime},#{level},#{comment},#{firstTime},"",0,"",0)
+    </insert>
+
+    <insert id="addSonComment" parameterType="com.zqb.main.entity.Comment">
+        INSERT INTO
+        t_comment (id,user_id,goods_id,comment_time,level,comment,firstTime,father_id,have_children,delete_flag,arrange)
+        VALUES (#{id},#{user.id},"",#{commentTime},0,#{comment},#{firstTime},#{fatherId},0,"",#{arrange})
+    </insert>
+
+
+
+    <select id="getAllComments" resultMap="commentResultMap">
+        SELECT * FROM t_comment
+        WHERE goods_id=#{goods.id} and firstTime=1 ORDER  BY level, comment_time DESC
+        <choose>
+            <when test="page !=null">
+                limit #{page.start},#{page.pageSize}
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+
+    </select>
+
+    <select id="getSonCommentsByFatherId" resultMap="commentResultMap">
+        SELECT  * FROM t_comment
+        WHERE father_id=#{fatherId} ORDER BY comment_time DESC
+    </select>
+
+    <select id="getAddCommentsByGoodsIdAndUserId" resultMap="commentResultMap">
+        SELECT * from t_comment
+        WHERE goods_id=#{goodsId} and user_id=#{userId} and firstTime=0 ORDER by comment_time DESC
+    </select>
+
+    <select id="getCommentCountByGoodsId" resultType="java.lang.Integer">
+        SELECT count(*) FROM t_comment WHERE goods_id=#{goodsId} and firstTime=1
+    </select>
+
+    <select id="getSellerComment" resultMap="commentResultMap">
+        SELECT * from t_comment
+        where father_id=#{fatherId} and firstTime=3 ORDER by comment_time DESC
+    </select>
+
+    <update id="updateFatherSonNum" parameterType="com.zqb.main.entity.Comment">
+        UPDATE t_comment
+        set have_children=#{haveChildren}
+        where id=#{id}
+    </update>
+
+    <select id="getFatherCommentByGoodsIdAndUserId" resultMap="commentResultMap">
+        SELECT * from t_comment where goods_id=#{goodsId} and user_id=#{userId} and firstTime=1
+    </select>
+</mapper>

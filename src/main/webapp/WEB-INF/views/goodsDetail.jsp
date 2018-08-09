@@ -11,6 +11,7 @@
     String basePath = request.getScheme() + "://"
             + request.getServerName() + ":" + request.getServerPort()
             + path;
+    String commentDetail="/onlineSale/commentDetail?goodsId=";
 %>
 <html>
 <head>
@@ -34,6 +35,16 @@
 
         .demo-spin-icon-load{
             animation: ani-demo-spin 1s linear infinite;
+        }
+
+        .ivu-icon-chatbubble-working{
+            font-size:15px;
+        }
+        .ivu-icon-ios-heart-outline{
+            font-size:20px !important;
+        }
+        .ivu-icon-ios-heart{
+            font-size:20px !important;
         }
 
     </style>
@@ -66,7 +77,7 @@
                     </template>
 
                     <Menu-Item name="username" v-else>
-                        <a>
+                        <a href="/onlineSale/personCenter/">
                             <template>
                                 <Avatar id="userPic" :src="'<%=basePath%>'+avatarSrc"/>
                             </template>
@@ -96,8 +107,18 @@
                         </a>
                     </Menu-Item>
 
+
+                    <Menu-Item name="MyMessage" v-if="haveLogin">
+                        <Badge :count="messageNum">
+                            <a href="/onlineSale/myMessage?content=name1">
+                                我的消息
+                            </a>
+                        </Badge>
+
+                    </Menu-Item>
+
                     <Menu-Item name="logout" v-if="haveLogin">
-                        <a style="color: #cd121b" href="/onlineSale/logout">
+                        <a style="color: #cd121b" @click="signOut()">
                             <Icon type="log-out"></Icon>
                             退出
                         </a>
@@ -140,7 +161,7 @@
                                 <i-col span="1" style="color: #b2b2b2;">|</i-col>
 
                                 <i-col span="7">
-                                    <label>累计评价 </label><span style="color: red;font-weight: bolder;"> 125</span>
+                                    <label>累计评价 </label><span style="color: red;font-weight: bolder;" >{{commentCount}}</span>
                                 </i-col>
                             </Row>
                             <hr style="margin-top: 10px;border-bottom: dotted; border-bottom-color: #b2b2b2;border-bottom-width: thin;"/>
@@ -153,7 +174,102 @@
                                 <i-col span="5" offset="1">
                                     <i-button type="error" style="height: 45px;width: 100%;" @click="addToCart">加入购物车</i-button>
                                 </i-col>
+
+                                <i-col span="2" offset="11" style="margin-top:15px">
+                                    <div  v-if="isCollected">
+                                        <a  @click="reduceCollection"><Icon type="ios-heart" style="color: red"></Icon></a>
+                                    </div>
+                                    <div v-else>
+                                        <a @click="addCollection"  ><Icon type="ios-heart-outline"></Icon></a>
+                                    </div>
+
+                                </i-col>
                             </Row>
+                            <Row style="margin-top:20px;background-color: #eeeeee;height:30px;">
+
+                                <i-col span="6" >
+                                    <span  style="margin-left: 15px;vertical-align: middle;font-size:13pt;font-weight:500">全部评论</span>
+                                </i-col>
+                            </Row>
+                            <Row v-if="commentList.length==0">
+                                <p>无评论</p>
+                            </Row>
+                            <Row v-else>
+                                <Row  v-for="item in commentList" style="margin-top:5px;margin-bottom: 20px">
+                                    <i-col span="3">
+                                        <Row style="margin-top: 11px">
+                                            <i-col span="5" offset="1">
+
+                                                <Avatar id="userPic" :src="'<%=basePath%>'+avatarSrc"/>
+
+                                            </i-col>
+                                            <i-col span="6" offset="3" style="margin-top: 11px">
+                                                <span style="color:#80848f;font-size:8pt">{{item.commentFirst.user.userName}}</span>
+                                            </i-col>
+                                        </Row>
+                                    </i-col>
+                                    <i-col span="21">
+                                        <Row style="margin-top: 11px">
+                                            <i-col span="2" style="margin-top: 8px;text-align: start">
+                                                <span style="text-align: start">
+                                                <Icon type="ios-star" v-for="n in item.commentFirst.level" :key="n"
+                                                    style="color:#ed3f14"></Icon>
+                                                </span>
+                                            </i-col>
+                                        </Row>
+
+                                        <Row style="margin-top:15px">
+                                            <i-col span="24">
+                                                <p style="font-size:10pt">{{item.commentFirst.comment}}</p>
+                                            </i-col>
+                                        </Row>
+
+                                        <Row style="margin-top:10px;margin-bottom: 10px">
+                                            <i-col span="4" style="text-align: start">
+                                                <span style="color:#80848f;font-size:8pt">{{item.commentFirst.goods.goodsDescription}}</span>
+                                            </i-col>
+                                            <i-col span="3">
+                                            <span style="text-align: start">
+                                                {{judgeNow(item.commentFirst.commentTime)}}
+                                            </span>
+                                            </i-col>
+                                            <i-col span="2"  offset="15" style="margin-top:2px">
+                                                <a :href="'<%=commentDetail%>'+item.commentFirst.goods.id+'&userId='+item.commentFirst.user.id+'&commentId='+item.commentFirst.id" target="_blank">
+                                                    <Icon type="chatbubble-working" color="grey"></Icon>
+                                                </a>
+                                            </i-col>
+                                        </Row>
+
+                                        <Row v-if="item.commentAddList.length!=0">
+                                            <hr style="color:#80848f;opacity: 0.1"/>
+                                        </Row>
+                                        <Row style="margin-top:10px" v-for="t in item.commentAddList" >
+
+                                            <span style="color:#80848f;font-size:8pt">[购买{{countDay(item.commentFirst.commentTime,t.commentTime)}}天后追评]</span>
+                                            <span style="font-size:10pt">{{t.comment}}</span>
+                                        </Row>
+
+                                        <Row v-if="item.commentSellerList.length!=0">
+                                            <hr style="color:#80848f;opacity: 0.1;margin-top:10px"/>
+                                        </Row>
+                                        <Row v-for="i in item.commentSellerList" style="margin-top:10px">
+                                            <span style="color:red;font-size:10pt">{{i.user.userName}} {{i.comment}} </span>
+                                        </Row>
+                                    </i-col>
+
+                                    <hr style="color:#80848f;opacity: 0.3"/>
+                                </Row>
+                                <Row style="margin-top:30px;">
+                                    <i-col offset="18" span="5">
+                                        <Page :current="page.no" :total="page.total" :page-size='4'  @on-change="changePage($event)" simple>
+                                        </Page>
+                                    </i-col>
+
+                                </Row>
+                            </Row>
+
+
+
                         </i-col>
                     </Row>
 
@@ -203,6 +319,8 @@
                             </Row>
                         </i-col>
                     </Row>
+
+
                 </i-col>
             </Row>
         </Content>
@@ -230,14 +348,125 @@
             userId:"",
             haveLogin:false,
             isSeller:false,
+            commentCount:0,
+            isCollected:false,
+
+            keys:"",
+
             cartNum:cookie("cartGoodsNum")||0,
+            messageNum:cookie("messageNum")||0,
+            cartList:[],
+
+            // 分页对象
+            page : {
+                no: 1,
+                total: 2
+            },
+
             purchaseNum:1,
             isSecKill:false,
+            commentList:[],
+            commentAddList:[],
+            commentSellerList:[]
         }
     });
 
+    function judgeNow(time){
+
+        var datetimeType="";
+        var now=new Date();
+        var date=new Date();
+        date.setTime(time);
+        if(getMonth(now)==getMonth(date)&&getDay(now)==getDay(date)&&now.getFullYear()==date.getFullYear()){
+            datetimeType+= "  " + getHours(date);   //时
+            datetimeType+= ":" + getMinutes(date);      //分
+            datetimeType+= ":" + getSeconds(date);      //分
+        }
+        else{
+            datetimeType+= date.getFullYear();   //年
+            datetimeType+= "-" + getMonth(date); //月
+            datetimeType+= "-" + getDay(date);   //日
+
+        }
+        return datetimeType;
+
+    }
+
+    function addCollection(){
+        event.stopPropagation();
+
+        console.log("点击了收藏按钮");
+
+        if(app.haveLogin){
+            ajaxGet("/onlineSale/addCollection?goodsId="+"${goods.id}"+"&userId="+app.userId,function(res){
+                if(res.code==="success"){
+
+                    app.isCollected=true;
+                }
+            },null,false);
+        }else{
+            var form=document.createElement("form");//定义一个form表单
+            form.action = "/onlineSale/myCart/gotoLogin";
+            form.method = "post";
+            form.style.display = "none";
+            var opt = document.createElement("input");
+            opt.name = "redirectUrl";
+            opt.value = window.location;
+            form.appendChild(opt);
+            document.body.appendChild(form);//将表单放置在web中
+            form.submit();//表单提交
+        }
+
+    }
+
+    function reduceCollection(){
+        console.log("点击了取消收藏按钮");
+        ajaxGet("/onlineSale/reduceCollection?goodsId="+"${goods.id}"+"&userId="+app.userId,function (res) {
+            if(res.code=="success"){
+                app.isCollected=false;
+            }
+        },null,false);
+    }
+
+    //计算追评的天数
+    function countDay(firstDay,newDay){
+        var first=new Date(firstDay);
+        var second=new Date(newDay);
+        var days=parseInt(Math.abs(first.getTime()-second.getTime())/86400000);
+        return days;
+    }
+    function refreshComments(){
+
+        ajaxGet("/onlineSale/getComments?goodsId="+"${goods.id}"+"&pageNo="+app.page.no+"&keys="+encodeURIComponent(app.keys),function(res){
+
+            app.commentList=res.data.list;
+            app.page.total=res.data.total;
+            app.commentCount=res.data.total;
+        },null,false);
+
+
+
+    }
+
+
+    //切换评论页面
+    function changePage(pageNo) {
+        if(pageNo != null)
+            app.page.no = pageNo;
+        refreshComments();
+    };
+
+//        ajaxGet("/onlineSale/consumer/getGoods?pageNo="+app.page.no+"&pageSize="+app.page.size+"&keys=" +encodeURIComponent(app.keys)
+//            ,function (res) {
+//                app.goodsList=res.data.list;
+//                app.page.total = res.data.total;
+//            },null,false);
+
+
 
     $(document).ready(function () {
+
+        refreshComments();
         if('${isSecKill}'=='true')
         {
             app.isSecKill=true;
@@ -253,6 +482,25 @@
                 app.userId=res.data.id;
                 app.avatarSrc=res.data.userPic;
                 app.haveLogin=true;
+                ajaxGet("/onlineSale/requireGoodsCollection?goodsId="+"${goods.id}"+"&userId="+app.userId,function (res) {
+                    if(res.code=="success"){
+                        app.isCollected=true;
+                    }else{
+                        app.isCollected=false;
+                    }
+                },null,false);
+
+
+                ajaxGet("/onlineSale/getMessageNum?userId="+app.userId,function(res){
+                    app.messageNum=res.data;
+                    var option={
+                        path:"/onlineSale",
+                        expires:7
+                    };
+
+                    cookie("messageNum",app.messageNum,option);
+                },null,false);
+
                 if(res.data.userType==="ADMINISTRATOR")
                 {
                     app.isSeller=true;
@@ -260,22 +508,22 @@
             }
         },null,false);
 
+
     });
 
 
     function addToCart()
     {
+        //更新cookie值
         var option={
             path:"/onlineSale",
             expires:7,
         };
-        var count=cookie("cartGoodsNum")||0;
-        cookie("cartGoodsNum",Number(count)+app.purchaseNum,option);
-        app.cartNum=Number(count)+app.purchaseNum;
-
+        var count=app.cartNum;
+        cookie("cartGoodsNum",Number(count)+1,option);
+        app.cartNum=Number(count)+1;
         var itemNumList=cookie("itemNumList")||"";
         var cartGoodsIdList=cookie("cartGoodsIdList")||"";
-
         if(cartGoodsIdList=="")
         {
             cartGoodsIdList="${goods.id}";
@@ -295,8 +543,20 @@
             }
             if(index==-1)
             {
-                cartGoodsIdList=cartGoodsIdList+";"+"${goods.id}";
-                itemNumList=itemNumList+";"+app.purchaseNum;
+
+                var last=cartGoodsIdList.charAt(cartGoodsIdList.length-1);
+                if(last==";"){
+                    cartGoodsIdList=cartGoodsIdList+"${goods.id}";
+                }else{
+                    cartGoodsIdList=cartGoodsIdList+";"+"${goods.id}";
+                }
+                last=itemNumList.charAt(itemNumList.length-1);
+                if(last==";"){
+                    itemNumList=itemNumList+app.purchaseNum;
+                }else{
+                    itemNumList=itemNumList+";"+app.purchaseNum;
+                }
+
             }
             else
             {
@@ -343,6 +603,8 @@
             ajaxPost("/onlineSale/secKill/doSecKill",data,function (res) {
 
             },null,false);
+
+
         }
         else//通过后端跳转到登录页面，因为登录后还得返回当前页
         {
@@ -356,6 +618,7 @@
             form.appendChild(opt);
             document.body.appendChild(form);//将表单放置在web中
             form.submit();//表单提交
+
         }
     }
 
@@ -440,6 +703,26 @@
                 webSocket.close();
             }
         }
+    }
+    function signOut(){
+        var list={
+            idList:cookie("cartGoodsIdList")||"",
+            numList:cookie("itemNumList")||""
+        };
+        ajaxPost("/onlineSale/logout",list,function(res){
+            if(res.code=="success"){
+                var option={
+                    path:"/onlineSale",
+                    expires:7,
+                };
+                cookie("cartGoodsIdList","",option);
+                cookie("itemNumList","",option);
+                cookie("cartGoodsNum",0,option);
+                console.log("goodsDetail进入退出方法");
+                window.location.href="/onlineSale/login/";
+            }
+        },null,false);
+
     }
 
 </script>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zqb.main.dao.GoodsCollectionDao">
+    <resultMap id="GoodsCollectionResultMap" type="com.zqb.main.entity.GoodsCollection">
+        <association property="user" column="user_id" select="com.zqb.main.dao.UserDao.selectById"/>
+        <association property="goods" column="goods_id" select="com.zqb.main.dao.GoodsDao.getGoodsByPrimaryKey"/>
+    </resultMap>
+
+    <insert id="addGoodsCollection" parameterType="com.zqb.main.entity.GoodsCollection">
+        INSERT INTO t_goodscollection (id,user_id,goods_id) VALUES(#{id},#{user.id},#{goods.id})
+    </insert>
+    <delete id="deleteGoodsCollection" parameterType="com.zqb.main.entity.GoodsCollection">
+        DELETE  from t_goodscollection where user_id=#{user.id} and goods_id=#{goods.id}
+    </delete>
+
+    <select id="requireByUserIdAndGoodsId" resultType="com.zqb.main.entity.GoodsCollection">
+        SELECT  * from t_goodscollection where user_id=#{userId} and goods_id=#{goodsId}
+    </select>
+
+    <select id="getCollectionGoodsByUserId" resultMap="GoodsCollectionResultMap">
+        SELECT * FROM t_goodscollection where user_id=#{userId}
+    </select>
+
+    <select id="getFocusGoodsNumByUserId" resultType="java.lang.Integer">
+        SELECT count(*) FROM t_goodscollection WHERE user_id=#{userId}
+    </select>
+</mapper>

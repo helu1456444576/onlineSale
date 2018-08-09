@@ -116,7 +116,7 @@
                     </template>
 
                     <Menu-Item name="username" v-else>
-                        <a>
+                        <a href="/onlineSale/personCenter/">
                             <template>
                                 <Avatar id="userPic" :src="'<%=basePath%>'+avatarSrc"/>
                             </template>
@@ -126,7 +126,7 @@
 
                     <Menu-Item name="MyCart">
                         <Badge :count="cartNum">
-                            <a href="/onlineSale/myCart/">
+                            <a href="/onlineSale/myCart">
                                 <Icon type="ios-cart"></Icon>
                                 购物车
                             </a>
@@ -146,8 +146,16 @@
                         </a>
                     </Menu-Item>
 
+                    <Menu-Item name="MyMessage" v-if="haveLogin">
+                        <Badge :count="messageNum">
+                            <a href="/onlineSale/myMessage">
+                                我的消息
+                            </a>
+                        </Badge>
+
+                    </Menu-Item>
                     <Menu-Item name="logout" v-if="haveLogin">
-                        <a style="color: #cd121b" href="/onlineSale/logout">
+                        <a style="color: #cd121b" @click="signOut()">
                             <Icon type="log-out"></Icon>
                             退出
                         </a>
@@ -278,6 +286,7 @@
             haveLogin:false,
             isSeller:false,
             cartNum:cookie("cartGoodsNum")||0,
+            messageNum:cookie("messageNum")||0,
 
             keys:"",
             seckillList:[],
@@ -319,6 +328,7 @@
 
         ajaxGet("/onlineSale/consumer/getGoods?pageNo="+app.page.no+"&pageSize="+app.page.size+"&keys=" +encodeURIComponent(app.keys)
             ,function (res) {
+
                 app.goodsList=res.data.list;
                 app.page.total = res.data.total;
             },null,false);
@@ -332,19 +342,19 @@
                 {
                     app.hasSecKillGoods=true;
                     app.seckillList=res.data;
-                    if(app.seckillList.length==null||app.seckillList.length==0)
+                    if(app.seckillList.length==null||app.seckillList.length==0) //无秒杀商品
                     {
                         app.hasSecKillGoods=false;
                     }
-                    else
+                    else//有秒杀商品
                     {
-                        ajaxGet("/onlineSale/secKill/getSecKillTime",function (res) {
+                        ajaxGet("/onlineSale/secKill/getSecKillTime",function (res) {  //返回结束时间
                             if(res.code==="success")
                             {
                                 var date = new Date();
                                 date.setTime(res.data);
                                 var date1=new Date();    //当前时间
-                                var date3=date.getTime()-date1.getTime();  //时间差的毫秒数
+                                var date3=date.getTime()-date1.getTime();  //时间差的毫秒数 距离结束时间差
                                 timer(parseInt(date3/1000));
                             }
                         },null,false);
@@ -354,7 +364,7 @@
 
     }
 
-    $(document).ready(function () {
+    $(document).ready(function () { //对一些条件值进行赋值
         ajaxGet("/onlineSale/getLoginUserInfo",function (res) {
             if(res.code==="success")
             {
@@ -366,6 +376,16 @@
                 {
                     app.isSeller=true;
                 }
+
+                ajaxGet("/onlineSale/getMessageNum?userId="+app.userId,function(res){
+                    app.messageNum=res.data;
+                    var option={
+                        path:"/onlineSale",
+                        expires:7,
+                    };
+
+                    cookie("messageNum",app.messageNum,option);
+                },null,false)
             }
         },null,false);
         refresh();
@@ -391,7 +411,7 @@
                 hour = 0,
                 minute = 0,
                 second = 0; //时间默认值
-            if (intDiff > 0)
+            if (intDiff > 0) //未超过秒杀时间
             {
                 hour = Math.floor(intDiff / (60 * 60)) ;
                 minute = Math.floor(intDiff / 60) -  (hour * 60);
@@ -406,7 +426,7 @@
 
             app.hour=hour;
             app.minute=minute;
-            app.second=second;
+            app.second=second; //设置倒计时时间
 
             intDiff--;
         }, 1000);
@@ -489,7 +509,7 @@
                     userId:"c1409d9c3b794b91867144e2aba05304",
                 };
                 date3=new Date().getTime();
-                app.$Spin.show({
+                app.$Spin.show({ //加载动画
                     render: function(h)
                     {
                         return h('div', [
@@ -585,6 +605,26 @@
     //通过websocket发送消息
     function sendMsgWithSocket(msg){
         webSocket.send(msg);
+    }
+    //退出登录清空三个cookie的值，将cookie的值同步到数据库
+    function signOut(){
+        var list={
+            idList:cookie("cartGoodsIdList")||"",
+            numList:cookie("itemNumList")||""
+        };
+        ajaxPost("/onlineSale/logout",list,function(res){
+            if(res.code=="success"){
+                var option={
+                    path:"/onlineSale",
+                    expires:7,
+                };
+                cookie("cartGoodsIdList","",option);
+                cookie("itemNumList","",option);
+                cookie("cartGoodsNum",0,option);
+                window.location.href="/onlineSale/login/";
+            }
+        },null,false);
+
     }
 </script>
 </body>

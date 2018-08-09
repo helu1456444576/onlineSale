@@ -47,7 +47,7 @@
                 </div>
                 <div class="layout-nav">
                     <Menu-Item name="username">
-                        <a>
+                        <a href="/onlineSale/personCenter/">
                             <template>
                                 <Avatar id="userPic" :src="'<%=basePath%>'+avatarSrc"/>
                             </template>

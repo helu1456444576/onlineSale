@@ -6,37 +6,40 @@ import java.util.Date;
  * Created by zqb on 2018/4/10.
  */
 public class Message extends BasicEntity<Message> {
-    private User sendUser;
+    private User buyer;
 
-    private User receiveUser;
-
-    private Date sendTime;
+    private User seller;
 
     private String message;//为kafkaMsg.toString()，是一个json对象
 
-    public User getSendUser() {
-        return sendUser;
+    @Override
+    public String toString() {
+        return "Message{" +
+                "buyer=" + buyer +
+                ", seller=" + seller +
+                ", message='" + message + '\'' +
+                '}';
     }
 
-    public void setSendUser(User sendUser) {
-        this.sendUser = sendUser;
+    public User getBuyer() {
+        return buyer;
     }
 
-    public User getReceiveUser() {
-        return receiveUser;
+
+
+    public User getSeller() {
+        return seller;
     }
 
-    public void setReceiveUser(User receiveUser) {
-        this.receiveUser = receiveUser;
+    public void setSeller(User seller) {
+        this.seller = seller;
     }
 
-    public Date getSendTime() {
-        return sendTime;
+    public void setBuyer(User buyer) {
+
+        this.buyer = buyer;
     }
 
-    public void setSendTime(Date sendTime) {
-        this.sendTime = sendTime;
-    }
 
     public String getMessage() {
         return message;
@@ -46,15 +49,5 @@ public class Message extends BasicEntity<Message> {
         this.message = message;
     }
 
-    @Override
-    public String toString() {
-        return "Message{" +
-                "id='" + getId() + '\'' +
-                "sendUser=" + sendUser +
-                ", receiveUser=" + receiveUser +
-                ", sendTime=" + sendTime +
-                ", message='" + message + '\'' +
-                ", deleteFlag=" + getDeleteFlag() +
-                '}';
-    }
+
 }

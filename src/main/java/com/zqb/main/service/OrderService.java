@@ -1,5 +1,6 @@
 package com.zqb.main.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.zqb.main.dao.GoodsDao;
 import com.zqb.main.dao.OrderDao;
 import com.zqb.main.dao.OrderGoodsDao;
@@ -45,6 +46,9 @@ public class OrderService {
     @Autowired
     private SecKillDao secKillDao;
 
+    @Autowired
+    private UserService userService;
+
     /**
      * @param goodsIdList 此次订单商品id列表
      * @param goodsNumList 与商品对应的商品数目
@@ -71,7 +75,7 @@ public class OrderService {
             else
             {
                 Goods goods=goodsDao.getGoodsByPrimaryKey(goodsId);
-                totalPrice+=goods.getGoodsPrice();
+                totalPrice+=goods.getGoodsPrice()*goodsNumList.get(i);
             }
 
         }
@@ -101,6 +105,7 @@ public class OrderService {
                     orderGoods.setOrder(order);
                     orderGoods.preInsert();
                     orderGoods.setSeckill(isSeckill);
+
                     if(orderGoodsDao.add(orderGoods)<=0)//通过抛异常回滚
                     {
                         throw new Exception("has exception and begin rollBack!!!");

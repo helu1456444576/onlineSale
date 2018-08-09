@@ -4,9 +4,11 @@ import com.zqb.main.dto.AjaxMessage;
 import com.zqb.main.dto.MsgType;
 import com.zqb.main.dto.Page;
 import com.zqb.main.entity.Goods;
+import com.zqb.main.entity.User;
 import com.zqb.main.service.CartService;
 import com.zqb.main.service.GoodsService;
 import com.zqb.main.service.SecKillService;
+import com.zqb.main.service.UserService;
 import com.zqb.main.utils.CheckSQLStrUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -35,6 +37,8 @@ public class ConsumerController {
 
     @Autowired
     private CartService cartService;
+    @Autowired
+    private UserService userService;
 
     @ModelAttribute
     public Goods get(@RequestParam(required=false) String id) {
@@ -61,7 +65,7 @@ public class ConsumerController {
             }
         }
         Page<Goods> page = new Page<Goods>(pageNo, pageSize);
-        page.setFuncName("changePage");
+        //page.setFuncName("changePage");
         Goods goods=new Goods();
         goods.setPage(page);
 
@@ -70,6 +74,8 @@ public class ConsumerController {
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.put("list", list);
         map.put("total", goodsService.getGoodsCount());
+        System.out.println("list.size："+list.size());
+        System.out.println("goodsService.getGoodsCount："+goodsService.getGoodsCount());
         return new AjaxMessage().Set(MsgType.Success, map);
     }
 
@@ -99,5 +105,7 @@ public class ConsumerController {
     {
         return cartService.addToCart(request,session);
     }
+
+
 
 }

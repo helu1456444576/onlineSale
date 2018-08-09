@@ -32,4 +32,12 @@
     <select id="getByPrimaryKey" resultType="user">
         SELECT * FROM t_user WHERE id=#{userId} limit 1
     </select>
+
+    <update id="updateMoneyById" parameterType="user">
+        UPDATE t_user SET  money=#{money} WHERE id=#{id}
+    </update>
+
+    <update id="updateUserMessageById" parameterType="user">
+        update t_user set user_name=#{userName} , user_mobile=#{userMobile} , user_mail=#{userMail} where id=#{id}
+    </update>
 </mapper>

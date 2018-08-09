@@ -15,6 +15,9 @@ import java.util.Properties;
  */
 public class KafkaTopicUtils {
 
+
+
+
     private static final String zookeeper_connect="140.143.6.130:2181,123.207.165.243:2181,123.207.171.22:2181";//为zookeeperHosts
 
     public static void createTopic(String topic,int partitions,int factors)

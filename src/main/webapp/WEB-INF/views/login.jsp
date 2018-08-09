@@ -138,10 +138,46 @@
                 ajaxPost("/onlineSale/doLogin",app.userInfo,function (res) {
                     if(res.code==="success")
                     {
-                        if(res.data==null)
-                            window.location.href="/onlineSale/index";
-                        else
-                            window.location.href=res.data;
+                        //登录成功后将购物车cookie的值更新到数据库
+
+//                        console.log("进入修改cookie的方法");
+//                        var option={
+//                            path:"/onlineSale",
+//                            expires:7,
+//                        };
+//                        cookie("cartGoodsIdList","",option);
+//                        console.log(cookie("cartGoodsIdList"));
+//                        cookie("itemNumList","",option);
+//                        console.log(cookie("itemNumList"));
+//                        cookie("cartGoodsNum",0,option);
+//                        console.log(cookie("cartGoodsNum"));
+                        var list={
+                            idList:cookie("cartGoodsIdList")||"",
+                            numList:cookie("itemNumList")||""
+                        };
+
+                        ajaxPost("/onlineSale/updateCartList",list,function(t){
+                            if(t.code=="success"){
+                                //将包括数量在内的三个cookie的值更新
+                                var option={
+                                  path:"/onlineSale",
+                                    expires:7
+                                   };
+                                cookie("cartGoodsIdList",t.data.cartGoodsList,option);
+                                console.log(t.data.cartGoodsList);
+                                cookie("itemNumList",t.data.itemNumList,option);
+                                console.log(t.data.itemNumList);
+                                cookie("cartGoodsNum",t.data.cartGoodsNum,option);
+                                console.log(t.data.cartGoodsNum);
+                                if(res.data==null)
+                                    window.location.href="/onlineSale/index";
+                                else
+                                    window.location.href=res.data;
+
+                            }
+                        },null,false);
+
+
                     }
                 },null,false);
 

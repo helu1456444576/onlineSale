@@ -25,4 +25,9 @@ public interface UserDao {
                              @Param("userPassword") String userPassword);
 
     User getByPrimaryKey(@Param("userId") String userId);
+
+    int updateMoneyById(User user);
+
+    int updateUserMessageById(User user);
+
 }

@@ -5,6 +5,15 @@ package com.zqb.main.entity;
  */
 public class User extends BasicEntity<User>{
 
+    public int getMoney() {
+        return money;
+    }
+
+    public void setMoney(int money) {
+        this.money = money;
+    }
+
+    private int money;
     private String userName;
 
     private String userPassword;
@@ -14,6 +23,16 @@ public class User extends BasicEntity<User>{
     private String userPic;
 
     private String userMobile;
+
+    private String userMail;
+
+    public String getUserMail() {
+        return userMail;
+    }
+
+    public void setUserMail(String userMail) {
+        this.userMail = userMail;
+    }
 
     public String getUserName() {
         return userName;
@@ -58,14 +77,14 @@ public class User extends BasicEntity<User>{
 
     @Override
     public String toString() {
-        return "User{" +
-                "id='" + getId() + '\'' +
-                ", userName='" + userName + '\'' +
-                ", userPassword='" + userPassword + '\'' +
-                ", userType=" + userType +
-                ", userPic='" + userPic + '\'' +
-                ", userMobile='" + userMobile + '\'' +
-                ", deleteFlag=" + getDeleteFlag() +
+        return "{" +
+                "'id':'" + getId() + '\'' +
+                ", 'userName':'" + userName + '\'' +
+                ", 'userPassword':'" + userPassword + '\'' +
+                ", 'userType':" + userType +
+                ", 'userPic':'" + userPic + '\'' +
+                ", 'userMobile':'" + userMobile + '\'' +
+                ", 'deleteFlag':" + getDeleteFlag() +
                 '}';
     }
 }

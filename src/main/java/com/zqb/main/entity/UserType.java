@@ -31,9 +31,9 @@ public enum UserType {
 
     @Override
     public String toString() {
-        return "UserType{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
+        return "{" +
+                "'id':" + id +
+                ", 'name':'" + name + '\'' +
                 '}';
     }
 }

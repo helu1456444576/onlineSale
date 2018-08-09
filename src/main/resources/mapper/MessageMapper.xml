@@ -5,10 +5,27 @@
 <mapper namespace="com.zqb.main.dao.MessageDao">
 
     <resultMap id="messageMap" type="message">
-        <association property="sendUser" column="send_user" select="com.zqb.main.dao.UserDao.selectById"/>
-        <association property="receiveUser" column="receive_user" select="com.zqb.main.dao.UserDao.selectById"/>
+        <association property="buyer" column="buyer" select="com.zqb.main.dao.UserDao.selectById"/>
+        <association property="seller" column="seller" select="com.zqb.main.dao.UserDao.selectById"/>
     </resultMap>
+    <insert id="addMessage" parameterType="com.zqb.main.entity.Message">
+        insert into t_message(id,buyer,seller,message,delete_flag)
+        VALUES (#{id},#{buyer.id},#{seller.id},#{message},0)
+    </insert>
 
+    <select id="getMessageNumByUserId" resultType="java.lang.Integer">
+        SELECT count(*) FROM t_message WHERE seller=#{userId} or buyer=#{userId}
+    </select>
 
+    <select id="getMessagesByUserId" resultMap="messageMap">
+        SELECT * from t_message WHERE  seller=#{userId} or buyer=#{userId}
+    </select>
 
+    <delete id="deleteById">
+        DELETE  from t_message WHERE id=#{id}
+    </delete>
+
+    <update id="updateMessageById">
+        update t_message set message=#{message} where id=#{id}
+    </update>
 </mapper>

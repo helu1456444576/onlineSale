@@ -2,8 +2,12 @@ package com.zqb.main.controller;
 
 import com.zqb.main.dto.AjaxMessage;
 import com.zqb.main.dto.MsgType;
+import com.zqb.main.entity.Cart;
+import com.zqb.main.entity.Goods;
 import com.zqb.main.entity.User;
 import com.zqb.main.entity.UserType;
+import com.zqb.main.service.CartService;
+import com.zqb.main.service.GoodsService;
 import com.zqb.main.service.UserService;
 import com.zqb.main.utils.Encryption;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -27,6 +32,10 @@ public class BasicController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private CartService cartService;
+    @Autowired
+    private GoodsService goodsService;
 
 
     @RequestMapping(value = {"/index",""})
@@ -112,10 +121,63 @@ public class BasicController {
     }
 
     @RequestMapping(value = "/logout")
-    public String logout(HttpSession session)
+    @ResponseBody
+    public Object logout(HttpSession session,HttpServletRequest request)
     {
+        User user = (User) session.getAttribute("userSession");
+        String cartGoodsId = request.getParameter("idList");
+        String itemNum = request.getParameter("numList");
+        String[] cartGoodsArray = cartGoodsId.split(";");
+        String[] itemNumArray = itemNum.split(";");
+        if(cartGoodsArray.length>=1){
+            //删除用户购物车中的所有值
+
+            cartService.deleteCartGoodsByUserId(user.getId());
+            //重新生成用户的购物车
+            for (int i = 0; i < cartGoodsArray.length; i++) {
+                if (cartGoodsArray[i]!=""&&itemNumArray[i]!="") {
+                    int num = Integer.parseInt(itemNumArray[i]);
+                    Goods goods = goodsService.getGoodsByPrimaryKey(cartGoodsArray[i]);
+                    if(goods!=null){
+                        Cart cart = new Cart();
+                        cart.setUser(user);
+                        cart.setGoods(goods);
+                        cart.setGoodsCount(num);
+                        cart.preInsert();
+                        cartService.add(cart);
+                    }
+                }
+
+            }
+        }
+
         session.removeAttribute("userSession");
         session.removeAttribute("redirectUrl");//把url清理
-        return "login";//退出后返回登录页
+
+        //把两个cookie的值同步到后台数据库
+
+
+        return new AjaxMessage().Set(MsgType.Success,null);
+    }
+
+    //重新编辑用户信息
+
+    @RequestMapping(value="/updateUserMessage")
+    @ResponseBody
+    public Object updateUserMessage(@RequestParam("userId") String userId, HttpServletRequest request){
+        String userName=request.getParameter("userName");
+        String userNumber=request.getParameter("userMobile");
+        String userMail=request.getParameter("userMail");
+        User user=userService.getByPrimaryKey(userId);
+
+        user.setUserName(userName);
+        user.setUserMobile(userNumber);
+        user.setUserMail(userMail);
+
+        if(userService.updateUserMessageById(user)>=0){
+            return new AjaxMessage().Set(MsgType.Success,null);
+        }
+        else
+            return new AjaxMessage().Set(MsgType.Error,null);
     }
 }

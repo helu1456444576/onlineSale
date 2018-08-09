@@ -9,7 +9,24 @@ public class Cart extends BasicEntity<Cart> {
 
     private User user;
 
-    private int goodsNum;
+    private int goodsCount;
+
+    public int getGoodsCount() {
+        return goodsCount;
+    }
+
+    public void setGoodsCount(int goodsCount) {
+        this.goodsCount = goodsCount;
+    }
+
+    @Override
+    public String toString() {
+        return "Cart{" +
+                "goods=" + goods +
+                ", user=" + user +
+                ", goodsCount=" + goodsCount +
+                '}';
+    }
 
     public Goods getGoods() {
         return goods;
@@ -27,22 +44,6 @@ public class Cart extends BasicEntity<Cart> {
         this.user = user;
     }
 
-    public int getGoodsNum() {
-        return goodsNum;
-    }
 
-    public void setGoodsNum(int goodsNum) {
-        this.goodsNum = goodsNum;
-    }
 
-    @Override
-    public String toString() {
-        return "Cart{" +
-                "id='" + getId() + '\'' +
-                "goods=" + goods +
-                ", user=" + user +
-                ", goodsNum=" + goodsNum +
-                ", deleteFlag=" + getDeleteFlag() +
-                '}';
-    }
 }

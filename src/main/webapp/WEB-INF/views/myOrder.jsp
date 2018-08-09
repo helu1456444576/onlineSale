@@ -55,7 +55,7 @@
                     </template>
 
                     <Menu-Item name="username" v-else>
-                        <a>
+                        <a href="/onlineSale/personCenter/">
                             <template>
                                 <Avatar id="userPic" :src="'<%=basePath%>'+avatarSrc"/>
                             </template>
@@ -79,8 +79,17 @@
                         </a>
                     </Menu-Item>
 
+                    <Menu-Item name="MyMessage" v-if="haveLogin">
+                        <Badge :count="messageNum">
+                            <a href="/onlineSale/myMessage?content=name1">
+                                我的消息
+                            </a>
+                        </Badge>
+
+                    </Menu-Item>
+
                     <Menu-Item name="logout" v-if="haveLogin">
-                        <a style="color: #cd121b" href="/onlineSale/logout">
+                        <a style="color: #cd121b" @click="signOut()">
                             <Icon type="log-out"></Icon>
                             退出
                         </a>
@@ -111,19 +120,6 @@
 
                         <Row style="margin-top: -15px;">
                             <table class="table table-hover table-bordered table-condensed" >
-                                <%--<thead>--%>
-                                    <%--<tr style="font-size: 15px;">--%>
-                                        <%--<th style="width: 50px;">--%>
-                                            <%--<Checkbox @on-change="checkAll()"  v-model="viewModel.allChecked" style="margin-left: 8px;">--%>
-                                            <%--</Checkbox>--%>
-                                        <%--</th>--%>
-                                        <%--<th>商品数目</th>--%>
-                                        <%--<th>商品总价</th>--%>
-                                        <%--<th>购买时间</th>--%>
-                                        <%--<th>操作</th>--%>
-                                    <%--</tr>--%>
-                                <%--</thead>--%>
-
                                 <Row style="font-size: 15px;margin-top: 20px;background-color: #eeeeee;line-height: 45px;">
                                     <i-col span="2" style="padding-top: 15px;">
                                         <Checkbox @on-change="checkAll()"  v-model="viewModel.allChecked" style="margin-left: 8px;">
@@ -144,6 +140,7 @@
                                     <i-col span="7">
                                         操作
                                     </i-col>
+
                                 </Row>
                                 <tbody>
                                     <tr v-for="item in viewModel.list" style="height: 40px;">
@@ -155,7 +152,7 @@
                                         <td style="width:29%;line-height: 40px;">{{datetimeFormatFromLong(item.orderTime)}}</td>
                                         <td style="width:29%;line-height: 40px;">
                                             <a @click="showDetail(item.id)">
-                                                <Icon type="edit"></Icon> 订单详情
+                                                <Icon type="document-text"></Icon> 订单详情
                                             </a>
                                         </td>
                                     </tr>
@@ -188,6 +185,7 @@
             haveLogin:false,
             isSeller:false,
             cartNum:cookie("cartGoodsNum")||0,
+            messageNum:cookie("messageNum")||0,
 
             //视图对象
             viewModel:{
@@ -211,17 +209,34 @@
             {
                 app.username=res.data.userName;
                 app.avatarSrc=res.data.userPic;
+                app.userId=res.data.id;
                 app.haveLogin=true;
                 if(res.data.userType==="ADMINISTRATOR")
                 {
                     app.isSeller=true;
                 }
+
+                ajaxGet("/onlineSale/getMessageNum?userId="+app.userId,function(res){
+                    app.messageNum=res.data;
+                    var option={
+                        path:"/onlineSale",
+                        expires:7,
+                    };
+
+                    cookie("messageNum",app.messageNum,option);
+                },null,false)
             }
         },null,false);
         refresh();
     });
 
 
+    //发表我的评论
+
+    function writeComment(goodsId){
+        //不经过后台直接定位前端将商品Id传过去
+        window.location.href="/onlineSale/myComment?goodsId="+goodsId;
+    }
     //改变每页数量
     function changePageSize(pageSize) {
         cookie("pageSize", pageSize);
@@ -291,24 +306,33 @@
             detail+='<th>商品数目(个) </th>';
             detail+='<th>是否为秒杀商品 </th>';
             detail+='<th>商家用户名 </th>';
+            detail+='<th>商品评价</th>';
             detail+='</tr></thead>';
 
             detail+='<tbody>';
 
+
+//        <td style="line-height: 40px;">
+//                <a @click="writeComment(item.id)">
+//                <Icon type="edit"></Icon> 我要评论
+//                </a>
+//                </td>
             for(var i=0;i<res.data.length;i++)
             {
+                var goodsId=res.data[i].goods.id;
                 detail+='<tr style="height: 32px;">';
-                detail+='<td style="width:25%;line-height: 32px;">'+res.data[i].goods.goodsName+'</td>';
-                detail+='<td style="width:25%;line-height: 32px;">'+res.data[i].goodsNum+'</td>';
-                detail+='<td style="width:25%;line-height: 32px;">'+(res.data[i].seckill==true?"是":"否")+'</td>';
-                detail+='<td style="width:25%;line-height: 32px;">'+res.data[i].goods.user.userName+'</td>';
+                detail+='<td style="width:20%;line-height: 32px;">'+res.data[i].goods.goodsName+'</td>';
+                detail+='<td style="width:20%;line-height: 32px;">'+res.data[i].goodsNum+'</td>';
+                detail+='<td style="width:20%;line-height: 32px;">'+(res.data[i].seckill==true?"是":"否")+'</td>';
+                detail+='<td style="width:20%;line-height: 32px;">'+res.data[i].goods.user.userName+'</td>';
+                detail+='<td style="width:20%;line-height:32px;"><a onclick="writeComment(\''+goodsId+'\')">我要评论</a></td>';
                 detail+='</tr>';
             }
             detail+='</tbody>';
             detail+='</table>';
             app.$Modal.info({
                 content: detail,
-                width:700,
+                width:800,
                 top:300,
                 loading: true,
                 onOk: function () {
@@ -325,6 +349,28 @@
                 app.$Modal.remove();
             }
         });
+    }
+
+
+    function signOut(){
+        var list={
+            idList:cookie("cartGoodsIdList")||"",
+            numList:cookie("itemNumList")||""
+        };
+        ajaxPost("/onlineSale/logout",list,function(res){
+            if(res.code=="success"){
+                var option={
+                    path:"/onlineSale",
+                    expires:7,
+                };
+                cookie("cartGoodsIdList","",option);
+                cookie("itemNumList","",option);
+                cookie("cartGoodsNum",0,option);
+                console.log("goodsDetail进入退出方法");
+                window.location.href="/onlineSale/login/";
+            }
+        },null,false);
+
     }
 </script>
 </body>

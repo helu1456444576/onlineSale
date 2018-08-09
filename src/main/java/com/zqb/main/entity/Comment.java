@@ -17,9 +17,41 @@ public class Comment extends BasicEntity<Comment>{
 
     private Date commentTime;
 
-    private boolean haveChildren;
+    public int getHaveChildren() {
+        return haveChildren;
+    }
+
+    public void setHaveChildren(int haveChildren) {
+        this.haveChildren = haveChildren;
+    }
+
+    private int  haveChildren;
 
     private int level;
+
+    public int getArrange() {
+        return arrange;
+    }
+
+    public void setArrange(int arrange) {
+        this.arrange = arrange;
+    }
+
+    private int arrange;
+
+    public int getFirstTime() {
+        return firstTime;
+    }
+
+    public void setFirstTime(int firstTime) {
+        this.firstTime = firstTime;
+    }
+
+    private int firstTime;
+
+    public Comment(){
+
+    }
 
     public Goods getGoods() {
         return goods;
@@ -61,13 +93,7 @@ public class Comment extends BasicEntity<Comment>{
         this.commentTime = commentTime;
     }
 
-    public boolean isHaveChildren() {
-        return haveChildren;
-    }
 
-    public void setHaveChildren(boolean haveChildren) {
-        this.haveChildren = haveChildren;
-    }
 
     public int getLevel() {
         return level;
@@ -79,16 +105,16 @@ public class Comment extends BasicEntity<Comment>{
 
     @Override
     public String toString() {
-        return "Comment{" +
-                "id='" + getId() + '\'' +
-                "goods=" + goods +
-                ", fatherId='" + fatherId + '\'' +
-                ", user=" + user +
-                ", comment='" + comment + '\'' +
-                ", commentTime=" + commentTime +
-                ", haveChildren=" + haveChildren +
-                ", level=" + level +
-                ", deleteFlag=" + getDeleteFlag() +
+        return "{" +
+                "goods:" + goods +
+                ", fatherId:'" + fatherId + '\'' +
+                ", user:" + user +
+                ", comment:'" + comment + '\'' +
+                ", commentTime:" + commentTime +
+                ", haveChildren:" + haveChildren +
+                ", level:" + level +
+                ", arrange:" + arrange +
+                ", firstTime:" + firstTime +
                 '}';
     }
 }

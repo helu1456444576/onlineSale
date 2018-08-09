@@ -68,4 +68,9 @@ public class UserService {
     {
         return userDao.getByPrimaryKey(userId);
     }
+
+    public int updateMoneyById(User user){return userDao.updateMoneyById(user);}
+    public int updateUserMessageById(User user){
+        return  userDao.updateUserMessageById(user);
+    }
 }

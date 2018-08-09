@@ -136,7 +136,7 @@
             },
             checkProtocol:true,
             const: validatePwdCheck = function (rule, value, callback) {
-
+                console.log(rule);
                 if (value === '') {
                     callback(new Error('请确认密码'));
                 } else if (value !== app.userInfo.userPassword) {

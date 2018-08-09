@@ -57,7 +57,7 @@
                 </div>
                 <div class="layout-nav">
                     <Menu-Item name="username">
-                        <a>
+                        <a href="/onlineSale/personCenter/">
                             <template>
                                 <Avatar id="userPic" :src="'<%=basePath%>'+avatarSrc"/>
                             </template>
@@ -65,8 +65,8 @@
                         </a>
                     </Menu-Item>
 
-                    <Menu-Item name="logout">
-                        <a style="color: #cd121b" href="/onlineSale/logout">
+                    <Menu-Item name="logout" v-if="haveLogin">
+                        <a style="color: #cd121b" @click="signOut()">
                             <Icon type="log-out"></Icon>
                             退出
                         </a>
@@ -248,6 +248,7 @@
                 {
                     app.isSeller=true;
                 }
+
             }
         },null,false);
         refresh();
